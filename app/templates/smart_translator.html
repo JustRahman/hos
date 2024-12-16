@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEIRO TRANSLATOR</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .light-theme {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .dark-theme {
+            background-color: #1e1e1e;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .dark-theme .container {
+            background-color: #333;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        select, button {
+            padding: 10px;
+            margin: 10px 5px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        select:hover, button:hover {
+            transform: scale(1.05);
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: border-color 0.2s ease;
+        }
+
+        select:focus, textarea:focus {
+            border-color: #007bff;
+        }
+
+        #outputText {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: opacity 0.5s ease;
+        }
+
+        .hidden {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <div class="container">
+        <h1>Переводчик речи в реальном времени</h1>
+
+        <div>
+            <label for="sourceLang">Язык источника:</label>
+            <select id="sourceLang">
+                <option value="en">Английский</option>
+                <option value="ru">Русский</option>
+                <option value="es">Испанский</option>
+                <option value="fr">Французский</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="targetLang">Язык перевода:</label>
+            <select id="targetLang">
+                <option value="en">Английский</option>
+                <option value="ru">Русский</option>
+                <option value="es">Испанский</option>
+                <option value="fr">Французский</option>
+            </select>
+        </div>
+
+        <button id="startRecordingBtn">Начать запись</button>
+        <textarea id="inputText" placeholder="Текст для перевода..."></textarea>
+
+        <button id="translateBtn">Перевести</button>
+
+        <div id="outputText" class="hidden"></div>
+
+        <button id="toggleThemeBtn">Сменить тему</button>
+    </div>
+
+    <script>
+        // Функция для смены темы
+        const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+        const body = document.body;
+
+        toggleThemeBtn.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            body.classList.toggle('light-theme');
+        });
+
+        // Функция для начала распознавания речи
+        const startRecordingBtn = document.getElementById('startRecordingBtn');
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const sourceLang = document.getElementById('sourceLang');
+        const targetLang = document.getElementById('targetLang');
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';  // Установите язык для распознавания
+
+        startRecordingBtn.addEventListener('click', () => {
+            recognition.lang = sourceLang.value; // Язык источника
+            recognition.start();
+        });
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            inputText.value = transcript;
+            console.log('Речь распознана:', transcript);
+        };
+
+        recognition.onerror = (event) => {
+            outputText.innerText = 'Ошибка распознавания: ' + event.error;
+        };
+
+        // Функция перевода текста
+        document.getElementById('translateBtn').addEventListener('click', () => {
+            const text = inputText.value;
+            const targetLangValue = targetLang.value;
+
+            fetch('/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: text, target: targetLangValue }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.translated_text) {
+                        outputText.classList.remove('hidden');
+                        outputText.innerText = data.translated_text;
+                    } else {
+                        outputText.classList.remove('hidden');
+                        outputText.innerText = 'Ошибка перевода.';
+                    }
+                })
+                .catch((error) => {
+                    console.error('Ошибка:', error);
+                    outputText.classList.remove('hidden');
+                    outputText.innerText = 'Ошибка соединения.';
+                });
+        });
+    </script>
+</body>
+</html>

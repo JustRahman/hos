@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewNeiro Voice Assistant</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --output-bg: #f9f9f9;
+            --button-bg: #4caf50;
+            --button-hover-bg: #45a049;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1e1e1e;
+            --text-color: #f4f4f4;
+            --output-bg: #333333;
+            --button-bg: #3b82f6;
+            --button-hover-bg: #2563eb;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            text-align: center;
+            background-color: var(--bg-color);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
+            transition: background-color 0.3s;
+        }
+
+        .container h1 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .output {
+            margin-top: 20px;
+            background-color: var(--output-bg);
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 1.2rem;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .button-container {
+            margin-top: 20px;
+        }
+
+        .button {
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: var(--button-hover-bg);
+        }
+
+        .theme-toggle {
+            margin-top: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: underline;
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NewNeiro Voice Assistant</h1>
+        <div class="output" id="output">Нажмите на микрофон и начните говорить...</div>
+        <div class="button-container">
+            <button class="button" id="start-recording">🎤 Говорить</button>
+            <div class="theme-toggle" id="theme-toggle">Переключить тему</div>
+        </div>
+    </div>
+
+    <script>
+        const output = document.getElementById("output");
+        const startButton = document.getElementById("start-recording");
+        const themeToggle = document.getElementById("theme-toggle");
+        const body = document.body;
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const synth = window.speechSynthesis;
+
+        if (!SpeechRecognition || !synth) {
+            output.textContent = "Ваш браузер не поддерживает голосовые функции.";
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.lang = "ru-RU";
+
+            startButton.addEventListener("click", () => {
+                output.textContent = "Слушаю...";
+                recognition.start();
+            });
+
+            recognition.onresult = async (event) => {
+                const userInput = event.results[0][0].transcript;
+                output.textContent = `Вы: ${userInput}`;
+
+                try {
+                    const response = await fetch('/api/get_response', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: userInput })
+                    });
+
+                    const data = await response.json();
+                    const reply = data.response || "Произошла ошибка.";
+
+                    output.innerHTML = `<strong>Вы:</strong> ${userInput}<br><strong>NewNeiro:</strong> ${reply}`;
+                    speak(reply);
+                } catch (error) {
+                    output.textContent = "Ошибка соединения с сервером.";
+                }
+            };
+
+            recognition.onerror = () => {
+                output.textContent = "Не удалось распознать речь. Попробуйте снова.";
+            };
+
+            function speak(text) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = "ru-RU";
+                utterance.voice = synth.getVoices().find(voice => voice.lang === "ru-RU" && voice.name.includes("Male"));
+                utterance.rate = 1.2; // Ускоренная скорость
+                synth.speak(utterance);
+            }
+        }
+
+        themeToggle.addEventListener("click", () => {
+            if (body.getAttribute("data-theme") === "dark") {
+                body.removeAttribute("data-theme");
+                themeToggle.textContent = "Переключить тему";
+            } else {
+                body.setAttribute("data-theme", "dark");
+                themeToggle.textContent = "Светлая тема";
+            }
+        });
+    </script>
+</body>
+</html>

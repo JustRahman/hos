@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "hos"
+version = "0.1.0"
+description = ""
+authors = ["rahmanB"]
+package-mode = false
+
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+flask = "^3.1.0"
+googletrans = "^3.0.0"
+numpy = ">=1.22,<=1.24.3"
+werkzeug = "^3.1.3"
+tensorflow = "^2.13"
+opencv-python = "^4.10.0"
+tensorflow-io-gcs-filesystem = "^0.37.1"
+deepface = "^0.0.93"
+g4f = "^0.3.9.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
