@@ -1,1 +1,1 @@
-web: gunicorn --workers=3 --bind 0.0.0.0:8080 app:create_app
+web: gunicorn --workers=3 --bind 0.0.0.0:$PORT app:create_app

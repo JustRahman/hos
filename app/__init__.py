@@ -1,7 +1,11 @@
 from flask import Flask,render_template
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 
 def create_app():
     app = Flask(__name__)
+    logging.debug('Creating the app...')
     app.config['SECRET_KEY'] = '7d8e37d4f657b2c0e4d109e5b3d54c7123472fd1f0c8923456789abcd1234efg'
     app.config['UPLOAD_FOLDER'] = 'uploads'
 
