@@ -17,6 +17,7 @@ opencv-python = "^4.10.0"
 tensorflow-io-gcs-filesystem = "^0.37.1"
 deepface = "^0.0.93"
 g4f = "^0.3.9.4"
+gunicorn = "^23.0.0"
 
 [build-system]
 requires = ["poetry-core"]
